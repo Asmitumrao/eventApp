@@ -40,7 +40,7 @@ public class UserDetailsImpl implements UserDetails {
     //    Returns the username used to authenticate the user.
     @Override
     public String getUsername() {
-        return user.getUsername();
+        return user.getEmail(); // Assuming email is used as the username
     }
 
 
