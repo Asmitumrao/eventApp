@@ -1,4 +1,4 @@
-package model;
+package com.veersa.eventApp.model;
 
 
 import jakarta.persistence.*;
