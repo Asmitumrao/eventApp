@@ -20,6 +20,7 @@ public class Event {
     private LocalDateTime dateTime;
     private int availableSeats;
 
+
     @ManyToOne
     private User organizer;
 }

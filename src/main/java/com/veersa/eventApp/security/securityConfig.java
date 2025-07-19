@@ -40,8 +40,17 @@ public class securityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers(HttpMethod.POST, "/api/events").hasRole("EVENT_CREATOR")
-                        .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasRole("USER")
+
+
+                        // Restricted access for modifying events
+                        .requestMatchers(HttpMethod.POST, "/api/events/**").hasRole("ORGANIZER")
+                        .requestMatchers(HttpMethod.PUT, "/api/events/**").hasRole("ORGANIZER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ORGANIZER")
+
+
+                        //
+//                        .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasRole("USER")
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

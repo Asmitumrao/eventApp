@@ -1,23 +1,30 @@
 package com.veersa.eventApp.model;
 
-
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
+import java.time.LocalDateTime;
+import lombok.*;
 
 @Entity
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class Booking {
+
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    private User user;
+    private LocalDateTime bookingTime;
 
     @ManyToOne
+    @JoinColumn(name = "event_id")
     private Event event;
 
-    private int numberOfTickets;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 
+    private int numberOfSeats;
 }
+

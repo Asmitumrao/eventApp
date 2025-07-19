@@ -34,15 +34,14 @@ public class EventController {
 
     // 🔐 Organizer or Admin: Create a new event
     @PostMapping
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+        System.out.println("Creating event: " + event);
         return ResponseEntity.ok(eventService.createEvent(event));
     }
 
 
     // 🔐 Organizer or Admin: Update an event
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
         return ResponseEntity.ok(eventService.updateEvent(id, event));
     }
@@ -50,11 +49,13 @@ public class EventController {
 
     // 🔐 Organizer or Admin: Delete an event
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
+
+
+
 
 
 }
