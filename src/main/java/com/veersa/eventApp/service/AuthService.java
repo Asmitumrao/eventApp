@@ -14,5 +14,5 @@ public interface AuthService {
 
     //ResponseEntity<?> updateUser(Long id, RegisterRequest request);
 
-    void changePassword(Long userId, ChangePasswordRequest request);
+    void changePassword(ChangePasswordRequest request);
 }

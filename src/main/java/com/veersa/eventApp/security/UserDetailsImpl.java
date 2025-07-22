@@ -1,7 +1,10 @@
 package com.veersa.eventApp.security;
 
 
+import com.veersa.eventApp.model.Role;
 import com.veersa.eventApp.model.User;
+import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -29,9 +32,7 @@ public class UserDetailsImpl implements UserDetails {
     // Returns the authorities granted to the user.
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        return user.getRoles().stream()
-                .map(SimpleGrantedAuthority::new)
-                .collect(Collectors.toList());
+        return List.of(new SimpleGrantedAuthority(user.getRole().getName()));
     }
 
 

@@ -5,6 +5,7 @@ import com.veersa.eventApp.DTO.AuthRequest;
 import com.veersa.eventApp.DTO.ChangePasswordRequest;
 import com.veersa.eventApp.DTO.RegisterRequest;
 import com.veersa.eventApp.service.AuthService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -29,10 +30,9 @@ public class AuthController {
         return authService.login(authRequest);
     }
 
-    @PutMapping("/change-password/{id}")
-    public ResponseEntity<?> changePassword(@PathVariable Long id,
-                                            @RequestBody ChangePasswordRequest request) {
-        authService.changePassword(id, request);
+    @PutMapping("/change-password")
+    public ResponseEntity<?> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        authService.changePassword(request);
         return ResponseEntity.ok("Password changed successfully");
     }
 

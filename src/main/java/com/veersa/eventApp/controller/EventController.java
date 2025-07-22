@@ -2,6 +2,10 @@ package com.veersa.eventApp.controller;
 
 
 
+import com.veersa.eventApp.DTO.EventCreateRequest;
+import com.veersa.eventApp.DTO.EventResponse;
+import com.veersa.eventApp.DTO.EventSearchRequest;
+import com.veersa.eventApp.DTO.EventUpdateRequest;
 import com.veersa.eventApp.model.Event;
 import com.veersa.eventApp.service.EventServiceImpl;
 import lombok.RequiredArgsConstructor;
@@ -21,20 +25,20 @@ public class EventController {
 
     // Public: Get all events
     @GetMapping
-    public ResponseEntity<List<Event>> getAllEvents() {
+    public ResponseEntity<List<EventResponse>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
 
     // Get single event by ID
     @GetMapping("/{id}")
-    public ResponseEntity<Event> getEventById(@PathVariable Long id) {
+    public ResponseEntity<EventResponse> getEventById(@PathVariable Long id) {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
 
     // 🔐 Organizer or Admin: Create a new event
     @PostMapping
-    public ResponseEntity<Event> createEvent(@RequestBody Event event) {
+    public ResponseEntity<EventResponse> createEvent(@RequestBody EventCreateRequest event) {
         System.out.println("Creating event: " + event);
         return ResponseEntity.ok(eventService.createEvent(event));
     }
@@ -42,7 +46,7 @@ public class EventController {
 
     // 🔐 Organizer or Admin: Update an event
     @PutMapping("/{id}")
-    public ResponseEntity<Event> updateEvent(@PathVariable Long id, @RequestBody Event event) {
+    public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody EventUpdateRequest event) {
         return ResponseEntity.ok(eventService.updateEvent(id, event));
     }
 
@@ -55,7 +59,11 @@ public class EventController {
     }
 
 
-
+    // 🔍 Public: Filter and search events
+    @GetMapping ("/search")
+    public ResponseEntity<List<EventResponse>> filterAndSearchEvents(@RequestBody EventSearchRequest request) {
+        return ResponseEntity.ok(eventService.filterAndSearchEvents(request));
+    }
 
 
 }

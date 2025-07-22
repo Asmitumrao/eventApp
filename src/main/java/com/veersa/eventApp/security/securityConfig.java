@@ -15,6 +15,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import com.veersa.eventApp.respository.UserRepository;
@@ -28,6 +29,8 @@ public class securityConfig {
     @Autowired
     private JwtAuthenticationFilter jwtFilter;
 
+    @Autowired
+    private AuthenticationEntryPoint jwtAuthenticationEntryPoint;
 
     @Autowired
     private UserDetailsServiceImpl userDetailsService;
@@ -38,19 +41,13 @@ public class securityConfig {
         return http
                 .csrf(csrf -> csrf.disable())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-
-
                         // Restricted access for modifying events
                         .requestMatchers(HttpMethod.POST, "/api/events/**").hasRole("ORGANIZER")
                         .requestMatchers(HttpMethod.PUT, "/api/events/**").hasRole("ORGANIZER")
                         .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ORGANIZER")
-
-
-                        //
-//                        .requestMatchers(HttpMethod.POST, "/api/bookings/**").hasRole("USER")
-
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

@@ -1,5 +1,6 @@
 package com.veersa.eventApp.security;
 
+import com.veersa.eventApp.exception.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -43,9 +44,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
 
-        token = authHeader.substring(7);
-        username = jwtUtil.extractUsername(token);
-//        roles = jwtUtil.extractRoles(token);
+        try{
+            token = authHeader.substring(7);
+            username = jwtUtil.extractUsername(token);
+
+        } catch (Exception e) {
+            throw new JwtException("Invalid JWT token", e);
+        }
 
         // if the username is not null and the security context is empty
         if(username !=null && SecurityContextHolder.getContext().getAuthentication()==null){
@@ -63,11 +68,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 authToken.setDetails(
                         new WebAuthenticationDetailsSource().buildDetails(request)
                 );
-
                 // setting the authentication in the security context
                 SecurityContextHolder.getContext().setAuthentication(authToken);
-
-
             }
         }
         filterChain.doFilter(request, response);
