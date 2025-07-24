@@ -2,6 +2,7 @@ package com.veersa.eventApp.model;
 
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -31,6 +32,8 @@ public class Booking {
 
     private int numberOfSeats;
 
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<Ticket> tickets;
 
     @PrePersist
     public void onCreate() {

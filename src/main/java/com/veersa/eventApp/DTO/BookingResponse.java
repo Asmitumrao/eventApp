@@ -5,10 +5,11 @@ import lombok.*;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
-@Builder
 @NoArgsConstructor
+@Builder
+@Data
 @AllArgsConstructor
 public class BookingResponse {
 
@@ -21,6 +22,7 @@ public class BookingResponse {
     private String username;
     private String email;
     private int numberOfSeats;
+    private List<TicketDTO> tickets;
 
     private LocalDateTime bookingTime;
 }

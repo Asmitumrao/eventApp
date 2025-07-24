@@ -62,5 +62,5 @@ import java.time.LocalDateTime;
         protected void onUpdate() {
             this.updatedAt = LocalDateTime.now();
         }
-    }
+
 }

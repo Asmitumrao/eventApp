@@ -18,5 +18,5 @@ public class RegisterRequest {
     @NotBlank(message = "Password is required")
     private String password;
 
-    private Long roleId; // Optional: or default it in service layer
+    private String role; // Optional: or default it in service layer
 }
