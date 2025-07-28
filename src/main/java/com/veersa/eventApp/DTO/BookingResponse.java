@@ -19,7 +19,7 @@ public class BookingResponse {
     private LocalDateTime eventDateTime;
 
     private Long userId;
-    private String username;
+    private String username; // for display purposes username of the user who made the booking
     private String email;
     private int numberOfSeats;
     private List<TicketDTO> tickets;

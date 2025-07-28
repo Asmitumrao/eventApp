@@ -13,11 +13,4 @@ public class EventAppApplication {
 		SpringApplication.run(EventAppApplication.class, args);
 	}
 
-	@Bean
-	public CommandLineRunner runner(UserDetailsService userDetailsService) {
-		return args -> {
-			System.out.println("UserDetailsService loaded: " + userDetailsService.getClass().getName());
-		};
-	}
-
 }

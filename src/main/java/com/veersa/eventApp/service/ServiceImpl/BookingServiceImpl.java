@@ -1,4 +1,4 @@
-package com.veersa.eventApp.service;
+package com.veersa.eventApp.service.ServiceImpl;
 
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
@@ -11,11 +11,13 @@ import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.respository.EventRepository;
 import com.veersa.eventApp.respository.TicketRepository;
 import com.veersa.eventApp.respository.UserRepository;
+import com.veersa.eventApp.service.BookingService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -23,7 +25,7 @@ import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
-public class BookingServiceImpl implements BookingService{
+public class BookingServiceImpl implements BookingService {
 
 
     private final BookingRepository bookingRepository;
@@ -31,6 +33,8 @@ public class BookingServiceImpl implements BookingService{
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final BookingMapper bookingMapper;
+    private  final NotificationService notificationService;
+
 
 
 
@@ -39,8 +43,10 @@ public class BookingServiceImpl implements BookingService{
     public BookingResponse createBooking(BookingRequest request) {
 
         // Validate user and event existence
-        User user = userRepository.findById(request.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        String email = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+
 
         // Check if the event exists and has available seats
         Event event = eventRepository.findById(request.getEventId())
@@ -68,6 +74,8 @@ public class BookingServiceImpl implements BookingService{
         Booking savedBooking = bookingRepository.save(booking);
         ticketRepository.saveAll(tickets);
 
+        // Notify the user about the booking creation
+        notificationService.bookingCreatedNotification(savedBooking.getId());
         return bookingMapper.mapToBookingResponse(savedBooking);
     }
 
@@ -78,7 +86,6 @@ public class BookingServiceImpl implements BookingService{
                 .orElseThrow(() -> new RuntimeException("User not found"));
 
         List<Booking> bookings = bookingRepository.findByUser(user);
-
         return bookingMapper.mapToBookingResponse(bookings);
     }
 
@@ -91,7 +98,6 @@ public class BookingServiceImpl implements BookingService{
         List<Booking> bookings = bookingRepository.findByEvent(event);
 
         return bookingMapper.mapToBookingResponse(bookings);
-
 
     }
 
@@ -109,6 +115,8 @@ public class BookingServiceImpl implements BookingService{
         // Delete the booking
         bookingRepository.delete(booking);
 
+        // Notify the user about the booking cancellation
+        notificationService.bookingCancelledNotification(bookingId);
         return "Booking with ID " + bookingId + " has been cancelled successfully.";
 
     }

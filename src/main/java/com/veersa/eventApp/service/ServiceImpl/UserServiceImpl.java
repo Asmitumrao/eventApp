@@ -1,7 +1,8 @@
-package com.veersa.eventApp.service;
+package com.veersa.eventApp.service.ServiceImpl;
 import com.veersa.eventApp.DTO.UserResponse;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.UserRepository;
+import com.veersa.eventApp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

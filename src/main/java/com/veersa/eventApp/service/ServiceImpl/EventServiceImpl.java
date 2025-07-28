@@ -1,4 +1,4 @@
-package com.veersa.eventApp.service;
+package com.veersa.eventApp.service.ServiceImpl;
 
 import com.veersa.eventApp.DTO.EventCreateRequest;
 import com.veersa.eventApp.DTO.EventResponse;
@@ -10,8 +10,8 @@ import com.veersa.eventApp.model.Event;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.EventRepository;
 import com.veersa.eventApp.respository.UserRepository;
+import com.veersa.eventApp.service.EventService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
@@ -19,7 +19,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class EventServiceImpl implements EventService{
+public class EventServiceImpl implements EventService {
 
 
     private final EventRepository eventRepository;
@@ -126,4 +126,15 @@ public class EventServiceImpl implements EventService{
 
         return eventMapper.mapToEventResponse(events);
     }
+
+    @Override
+    public List<EventResponse> getEventsByUserId(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+
+        List<Event> events = eventRepository.findByOrganizer(user);
+        return eventMapper.mapToEventResponse(events);
+    }
+
+
 }

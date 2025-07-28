@@ -19,7 +19,6 @@ public class Ticket {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-
     private String ticketNumber; // You can generate this uniquely (UUID or custom format)
 
     @ManyToOne

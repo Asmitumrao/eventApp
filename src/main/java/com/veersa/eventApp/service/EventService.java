@@ -16,4 +16,5 @@ public interface EventService {
     EventResponse updateEvent(Long id, EventUpdateRequest request);
     void deleteEvent(Long id);
     List<EventResponse> filterAndSearchEvents(EventSearchRequest request);
+    public List<EventResponse> getEventsByUserId(Long userId);
 }

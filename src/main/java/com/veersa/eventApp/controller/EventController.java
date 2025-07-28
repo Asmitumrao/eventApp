@@ -6,13 +6,15 @@ import com.veersa.eventApp.DTO.EventCreateRequest;
 import com.veersa.eventApp.DTO.EventResponse;
 import com.veersa.eventApp.DTO.EventSearchRequest;
 import com.veersa.eventApp.DTO.EventUpdateRequest;
-import com.veersa.eventApp.model.Event;
-import com.veersa.eventApp.service.EventServiceImpl;
+import com.veersa.eventApp.service.ServiceImpl.EventServiceImpl;
+import com.veersa.eventApp.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
+import java.security.Security;
 import java.util.List;
 
 @RestController
@@ -21,7 +23,7 @@ import java.util.List;
 public class EventController {
 
     private final EventServiceImpl eventService;
-
+    private final SecurityUtils securityUtils;
 
     // Public: Get all events
     @GetMapping
@@ -35,9 +37,15 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEventById(id));
     }
 
+    // 🔍 Public: Filter and search events
+    @GetMapping ("/search")
+    public ResponseEntity<List<EventResponse>> filterAndSearchEvents(@RequestBody EventSearchRequest request) {
+        return ResponseEntity.ok(eventService.filterAndSearchEvents(request));
+    }
 
     // 🔐 Organizer or Admin: Create a new event
     @PostMapping
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<EventResponse> createEvent(@RequestBody EventCreateRequest event) {
         System.out.println("Creating event: " + event);
         return ResponseEntity.ok(eventService.createEvent(event));
@@ -46,6 +54,7 @@ public class EventController {
 
     // 🔐 Organizer or Admin: Update an event
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<EventResponse> updateEvent(@PathVariable Long id, @RequestBody EventUpdateRequest event) {
         return ResponseEntity.ok(eventService.updateEvent(id, event));
     }
@@ -53,17 +62,34 @@ public class EventController {
 
     // 🔐 Organizer or Admin: Delete an event
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<Void> deleteEvent(@PathVariable Long id) {
         eventService.deleteEvent(id);
         return ResponseEntity.noContent().build();
     }
 
-
-    // 🔍 Public: Filter and search events
-    @GetMapping ("/search")
-    public ResponseEntity<List<EventResponse>> filterAndSearchEvents(@RequestBody EventSearchRequest request) {
-        return ResponseEntity.ok(eventService.filterAndSearchEvents(request));
+    // 🔐 Admin: Get all events created by a specific user
+    @GetMapping("/user/{userId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<EventResponse>> getEventsByUserId(@PathVariable Long userId) {
+        return ResponseEntity.ok(eventService.getEventsByUserId(userId));
     }
 
+    // 🔐 Organizer : Get all events created by himself
+    public ResponseEntity<List<EventResponse>> getEventsByUserId() {
+
+         //user ID is obtained from the authenticated user's context
+        Long userId = securityUtils.getCurrentUserId() ;
+
+        return ResponseEntity.ok(eventService.getEventsByUserId(userId));
+    }
+
+
+    // 🔐 Admin: Get all events
+    @GetMapping("/admin/all")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<List<EventResponse>> getAllEventsForAdmin() {
+        return ResponseEntity.ok(eventService.getAllEvents());
+    }
 
 }

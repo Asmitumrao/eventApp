@@ -1,4 +1,4 @@
-package com.veersa.eventApp.service;
+package com.veersa.eventApp.service.ServiceImpl;
 
 import com.veersa.eventApp.DTO.AuthRequest;
 import com.veersa.eventApp.DTO.AuthResponse;
@@ -11,6 +11,7 @@ import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.RoleRepository;
 import com.veersa.eventApp.respository.UserRepository;
 import com.veersa.eventApp.security.JwtUtil;
+import com.veersa.eventApp.service.AuthService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -25,12 +26,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.Set;
-
 
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService{
+public class AuthServiceImpl implements AuthService {
 
     private final UserRepository userRepository;
 
