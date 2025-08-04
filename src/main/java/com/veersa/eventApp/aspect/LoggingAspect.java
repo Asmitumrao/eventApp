@@ -22,7 +22,6 @@ public class LoggingAspect {
     public void controllerLayerExecution() {
         // Pointcut for all methods in the controller package
     }
-
     @Pointcut("execution(* com.veersa.eventApp.service.*.*(..))")
     public void serviceLayerExecution() {
         // Pointcut for all methods in the service package

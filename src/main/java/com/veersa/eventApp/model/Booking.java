@@ -32,6 +32,9 @@ public class Booking {
 
     private int numberOfSeats;
 
+    @Enumerated(EnumType.STRING)
+    private BookingStatus status = BookingStatus.PENDING; // Default status
+
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 

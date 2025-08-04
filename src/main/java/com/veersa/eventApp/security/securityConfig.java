@@ -43,11 +43,19 @@ public class securityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .exceptionHandling(ex -> ex.authenticationEntryPoint(jwtAuthenticationEntryPoint))
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(
+                                "/v3/api-docs/**",
+                                "/swagger-ui/**",
+                                "/swagger-ui.html",
+                                "/swagger-resources/**",
+                                "/webjars/**"
+                        ).permitAll()
                         .requestMatchers("/api/auth/**").permitAll()
                         // Restricted access for modifying events
-                        .requestMatchers(HttpMethod.POST, "/api/events/**").hasRole("ORGANIZER")
+//                        .requestMatchers(HttpMethod.POST, "/api/events/**").hasRole("ORGANIZER")
                         .requestMatchers(HttpMethod.PUT, "/api/events/**").hasRole("ORGANIZER")
                         .requestMatchers(HttpMethod.DELETE, "/api/events/**").hasRole("ORGANIZER")
+
                         .requestMatchers("/api/admin/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )

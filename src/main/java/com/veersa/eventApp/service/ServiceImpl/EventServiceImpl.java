@@ -5,12 +5,14 @@ import com.veersa.eventApp.DTO.EventResponse;
 import com.veersa.eventApp.DTO.EventSearchRequest;
 import com.veersa.eventApp.DTO.EventUpdateRequest;
 import com.veersa.eventApp.exception.EventNotFoundException;
+import com.veersa.eventApp.exception.UserNotFoundException;
 import com.veersa.eventApp.mapper.EventMapper;
 import com.veersa.eventApp.model.Event;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.EventRepository;
 import com.veersa.eventApp.respository.UserRepository;
 import com.veersa.eventApp.service.EventService;
+import com.veersa.eventApp.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
@@ -25,6 +27,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
+    private final SecurityUtils securityUtils;
 
     @Override
     public List<EventResponse> getAllEvents() {
@@ -34,7 +37,7 @@ public class EventServiceImpl implements EventService {
     @Override
     public EventResponse getEventById(Long id) {
         Event event = eventRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Event not found with id: " + id));
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
 
         return eventMapper.mapToEventResponse(event);
     }
@@ -43,9 +46,7 @@ public class EventServiceImpl implements EventService {
     public EventResponse createEvent(EventCreateRequest event) {
 
         // get the user who created the event
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User organizer = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        User organizer = securityUtils.getCurrentUser();
         // set the organizer of the event
         Event newEvent = eventMapper.toEvent(event);
         newEvent.setOrganizer(organizer);
@@ -62,7 +63,7 @@ public class EventServiceImpl implements EventService {
         // Check if the authenticated user is the organizer of the event
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User authenticatedUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         if (!existingEvent.getOrganizer().getId().equals(authenticatedUser.getId())) {
             throw new RuntimeException("You are not authorized to update this event");
         }
@@ -104,7 +105,7 @@ public class EventServiceImpl implements EventService {
         // Check if the authenticated user is the organizer of the event
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
         User authenticatedUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
         if (!event.getOrganizer().getId().equals(authenticatedUser.getId())) {
             throw new RuntimeException("You are not authorized to delete this event");
 
@@ -130,11 +131,21 @@ public class EventServiceImpl implements EventService {
     @Override
     public List<EventResponse> getEventsByUserId(Long userId) {
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + userId));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
 
         List<Event> events = eventRepository.findByOrganizer(user);
         return eventMapper.mapToEventResponse(events);
     }
+
+    @Override
+    public List<EventResponse> getEventsByCategoryId(Long categoryId) {
+        List<Event> events = eventRepository.findByCategoryId(categoryId);
+        if (events.isEmpty()) {
+            throw new EventNotFoundException("No events found for category with id: " + categoryId);
+        }
+        return eventMapper.mapToEventResponse(events);
+    }
+
 
 
 }

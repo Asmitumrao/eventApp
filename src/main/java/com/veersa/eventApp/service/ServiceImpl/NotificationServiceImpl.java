@@ -1,9 +1,12 @@
 package com.veersa.eventApp.service.ServiceImpl;
 
 import com.veersa.eventApp.DTO.EmailRequest;
+import com.veersa.eventApp.exception.BookingNotFoundException;
 import com.veersa.eventApp.model.Booking;
 import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.service.BookingService;
+
+import com.veersa.eventApp.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
@@ -14,7 +17,7 @@ import org.springframework.web.client.RestTemplate;
 
 @Service
 @RequiredArgsConstructor
-public class NotificationServiceImpl implements BookingService.NotificationService {
+public class NotificationServiceImpl implements NotificationService {
 
 
     private final RestTemplate restTemplate;
@@ -30,7 +33,7 @@ public class NotificationServiceImpl implements BookingService.NotificationServi
 
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + bookingId));
 
         String to = booking.getUser().getEmail().toLowerCase();
         String subject = "Booking Confirmation";
@@ -49,7 +52,7 @@ public class NotificationServiceImpl implements BookingService.NotificationServi
     public void bookingCancelledNotification(Long bookingId) {
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + bookingId));
 
         String to = booking.getUser().getEmail().toLowerCase();
         String subject = "Booking Cancellation";
@@ -69,7 +72,7 @@ public class NotificationServiceImpl implements BookingService.NotificationServi
     public void bookingUpdatedNotification(Long bookingId) {
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found with id: " + bookingId));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + bookingId));
         String to = booking.getUser().getEmail().toLowerCase();
         String subject = "Booking Update";
         String body = "Dear " + booking.getUser().getUsername() + ",\n\n" +
@@ -81,6 +84,7 @@ public class NotificationServiceImpl implements BookingService.NotificationServi
                 "EventApp Team";
         mailSender(to, subject, body);
     }
+
     private void mailSender(String to, String subject, String body) {
         EmailRequest emailRequest = new EmailRequest(to, subject, body);
 

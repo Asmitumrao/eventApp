@@ -1,5 +1,6 @@
 package com.veersa.eventApp.service.ServiceImpl;
 import com.veersa.eventApp.DTO.UserResponse;
+import com.veersa.eventApp.exception.UserNotFoundException;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.UserRepository;
 import com.veersa.eventApp.service.UserService;
@@ -17,7 +18,7 @@ public class UserServiceImpl implements UserService {
     public UserResponse getUserById(Long id) {
 
         User user = userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found with id: " + id));
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
 
         UserResponse response = new UserResponse();
         response.setId(user.getId());

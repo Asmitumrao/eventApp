@@ -18,7 +18,7 @@ import java.security.Security;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/events")
+@RequestMapping("/api/events/")
 @RequiredArgsConstructor
 public class EventController {
 
@@ -38,7 +38,7 @@ public class EventController {
     }
 
     // 🔍 Public: Filter and search events
-    @GetMapping ("/search")
+    @PostMapping("/search")
     public ResponseEntity<List<EventResponse>> filterAndSearchEvents(@RequestBody EventSearchRequest request) {
         return ResponseEntity.ok(eventService.filterAndSearchEvents(request));
     }
@@ -47,7 +47,6 @@ public class EventController {
     @PostMapping
     @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
     public ResponseEntity<EventResponse> createEvent(@RequestBody EventCreateRequest event) {
-        System.out.println("Creating event: " + event);
         return ResponseEntity.ok(eventService.createEvent(event));
     }
 
@@ -68,19 +67,19 @@ public class EventController {
         return ResponseEntity.noContent().build();
     }
 
-    // 🔐 Admin: Get all events created by a specific user
-    @GetMapping("/user/{userId}")
+    // 🔐 Admin: Get all events created by a specific
+    @GetMapping("/admin/{id}")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<List<EventResponse>> getEventsByUserId(@PathVariable Long userId) {
-        return ResponseEntity.ok(eventService.getEventsByUserId(userId));
+    public ResponseEntity<List<EventResponse>> getEventsByUserId(@PathVariable Long id) {
+        return ResponseEntity.ok(eventService.getEventsByUserId(id));
     }
 
     // 🔐 Organizer : Get all events created by himself
+    @GetMapping("/organizer/all")
+    @PreAuthorize("hasRole('ORGANIZER')")
     public ResponseEntity<List<EventResponse>> getEventsByUserId() {
-
          //user ID is obtained from the authenticated user's context
         Long userId = securityUtils.getCurrentUserId() ;
-
         return ResponseEntity.ok(eventService.getEventsByUserId(userId));
     }
 
@@ -91,5 +90,13 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getAllEventsForAdmin() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
+
+
+    // Get all events by category
+    @GetMapping("/category/{categoryId}")
+    public ResponseEntity<List<EventResponse>> getEventsByCategory(@PathVariable Long categoryId) {
+        return ResponseEntity.ok(eventService.getEventsByCategoryId(categoryId));
+    }
+
 
 }

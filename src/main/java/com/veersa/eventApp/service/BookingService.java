@@ -1,13 +1,19 @@
 package com.veersa.eventApp.service;
 
+import com.razorpay.RazorpayException;
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
+import com.veersa.eventApp.model.Booking;
 
 import java.util.List;
 
 public interface BookingService {
 
-    BookingResponse createBooking(BookingRequest request);
+
+
+    Booking savePendingBooking(BookingRequest bookingRequest);
+
+    public boolean verifyPaymentAndConfirm(Long bookingId,String paymentId) throws RazorpayException;
 
     List<BookingResponse> getBookingsByUser(Long userId);
 
@@ -15,14 +21,6 @@ public interface BookingService {
 
     String cancelBooking(Long bookingId);
 
-    interface NotificationService {
+    BookingResponse getBookingById(Long bookingId);
 
-        void bookingCreatedNotification(Long bookingId);
-
-        void bookingCancelledNotification(Long bookingId);
-
-        void bookingUpdatedNotification(Long bookingId);
-
-
-    }
 }

@@ -5,6 +5,7 @@ import lombok.Data;
 @Data
 public class BookingRequest {
     private Long eventId;
-    private Long userId;
+    private String userEmail;
+    private String userPhone;
     private int numberOfSeats;
 }

@@ -17,4 +17,5 @@ public interface EventService {
     void deleteEvent(Long id);
     List<EventResponse> filterAndSearchEvents(EventSearchRequest request);
     public List<EventResponse> getEventsByUserId(Long userId);
+    List<EventResponse> getEventsByCategoryId(Long categoryId);
 }

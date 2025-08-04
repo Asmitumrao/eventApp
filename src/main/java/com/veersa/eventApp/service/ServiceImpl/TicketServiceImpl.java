@@ -1,5 +1,6 @@
 package com.veersa.eventApp.service.ServiceImpl;
 
+import com.veersa.eventApp.exception.BookingNotFoundException;
 import com.veersa.eventApp.model.Booking;
 import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.service.TicketService;
@@ -22,7 +23,7 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public void downloadTicketsForBooking(Long bookingId, HttpServletResponse response) {
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new RuntimeException("Booking not found"));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found"));
 
         try {
             pdfGenerator.generateTicketsPdf(booking, response);
