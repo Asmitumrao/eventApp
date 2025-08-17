@@ -3,6 +3,7 @@ package com.veersa.eventApp.service;
 import com.razorpay.RazorpayException;
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
+import com.veersa.eventApp.DTO.PaymentResponse;
 import com.veersa.eventApp.model.Booking;
 
 import java.util.List;
@@ -10,6 +11,10 @@ import java.util.List;
 public interface BookingService {
 
 
+
+
+
+    public PaymentResponse initiateBooking(BookingRequest request);
 
     Booking savePendingBooking(BookingRequest bookingRequest);
 

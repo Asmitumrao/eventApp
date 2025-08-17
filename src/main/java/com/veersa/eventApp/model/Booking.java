@@ -30,6 +30,16 @@ public class Booking {
     @NotNull
     private User user;
 
+    @Column(name = "user_email", nullable = false)
+    private String userEmail;
+
+    @Column(name = "user_phone", nullable = false)
+    private String userPhone;
+
+    @Lob
+    @Column(columnDefinition = "TEXT")
+    private String attendeeJson;
+
     private int numberOfSeats;
 
     @Enumerated(EnumType.STRING)

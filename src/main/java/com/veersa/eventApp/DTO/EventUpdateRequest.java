@@ -1,17 +1,41 @@
 package com.veersa.eventApp.DTO;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
+
+import java.time.LocalDateTime;
 
 @Data
 public class EventUpdateRequest {
+
+    @NotBlank(message = "Event name cannot be blank")
     private String name;
+
+    @NotBlank(message = "Event description cannot be blank")
     private String description;
-    private String startTime; // Changed to String for easier JSON handling
-    private String endTime; // Changed to String for easier JSON handling
+
+    @NotNull(message = "Event start time cannot be null")
+    private LocalDateTime startTime;
+
+    private LocalDateTime endTime;
+
+    @NotBlank(message = "Event location cannot be blank")
     private String location;
-    private Integer availableSeats; // Changed to Integer to allow null values
-    private Double pricePerTicket; // Changed to Double to allow null values
-    private Boolean isOnline; // Changed to Boolean to allow null values
+
+    @Min(value = 1, message = "Available seats must be at least 1")
+    private int availableSeats;
+
+    @Min(value = 0, message = "Price per ticket must be non-negative")
+    private double pricePerTicket;
+
+
+    @NotNull(message = "Please specify if the event is online or offline")
+    private Boolean isOnline;
+
     private String eventImageUrl;
+
+    @NotNull(message = "Category ID cannot be null")
     private Long categoryId;
 }

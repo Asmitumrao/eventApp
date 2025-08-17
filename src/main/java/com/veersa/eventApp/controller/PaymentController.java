@@ -19,31 +19,7 @@ import java.math.BigDecimal;
 @RequiredArgsConstructor
 public class PaymentController {
 
-    private final PaymentService razorpayService;
     private final BookingService bookingService;
-
-
-    @PostMapping("/initiate")
-    public ResponseEntity<PaymentResponse> initiateBooking(@RequestBody BookingRequest request) throws RazorpayException {
-        // 1. Save booking in pending state (do not reduce seats or confirm)
-        Booking pendingBooking = bookingService.savePendingBooking(request);
-
-        // ammount in paise
-        int amountInRupees = new BigDecimal(pendingBooking.getEvent().getPricePerTicket())
-                .multiply(BigDecimal.valueOf(request.getNumberOfSeats()))
-                .intValue();
-
-
-        // 2. Generate payment link
-        PaymentResponse paymentObject = razorpayService.createPaymentLink(
-                amountInRupees, // Example amount in rupees
-                request.getUserEmail(),
-                request.getUserPhone(),
-                pendingBooking.getId()
-        ) ;
-        System.out.println(paymentObject.toString());
-        return ResponseEntity.ok(paymentObject);
-    }
 
     @GetMapping("/payment/verify")
     public ResponseEntity<?> verifyAndConfirmBooking(@RequestParam Long bookingId , @RequestParam String paymentId){

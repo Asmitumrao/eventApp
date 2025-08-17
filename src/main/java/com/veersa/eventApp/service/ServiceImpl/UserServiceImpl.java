@@ -4,6 +4,7 @@ import com.veersa.eventApp.exception.UserNotFoundException;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.UserRepository;
 import com.veersa.eventApp.service.UserService;
+import com.veersa.eventApp.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -13,13 +14,12 @@ import org.springframework.stereotype.Service;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final SecurityUtils securityUtils;
 
     @Override
-    public UserResponse getUserById(Long id) {
+    public UserResponse getUserById() {
 
-        User user = userRepository.findById(id)
-                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + id));
-
+        User user = securityUtils.getCurrentUser();
         UserResponse response = new UserResponse();
         response.setId(user.getId());
         response.setUsername(user.getUsername());

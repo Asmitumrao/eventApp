@@ -8,9 +8,12 @@ import com.veersa.eventApp.exception.EventNotFoundException;
 import com.veersa.eventApp.exception.UserNotFoundException;
 import com.veersa.eventApp.mapper.EventMapper;
 import com.veersa.eventApp.model.Event;
+import com.veersa.eventApp.model.EventCategory;
 import com.veersa.eventApp.model.User;
+import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.respository.EventRepository;
 import com.veersa.eventApp.respository.UserRepository;
+import com.veersa.eventApp.service.EventCategoryService;
 import com.veersa.eventApp.service.EventService;
 import com.veersa.eventApp.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -28,6 +31,8 @@ public class EventServiceImpl implements EventService {
     private final UserRepository userRepository;
     private final EventMapper eventMapper;
     private final SecurityUtils securityUtils;
+    private final EventCategoryService eventCategoryService;
+    private final BookingRepository bookingRepository;
 
     @Override
     public List<EventResponse> getAllEvents() {
@@ -38,7 +43,6 @@ public class EventServiceImpl implements EventService {
     public EventResponse getEventById(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
-
         return eventMapper.mapToEventResponse(event);
     }
 
@@ -47,52 +51,63 @@ public class EventServiceImpl implements EventService {
 
         // get the user who created the event
         User organizer = securityUtils.getCurrentUser();
+
         // set the organizer of the event
         Event newEvent = eventMapper.toEvent(event);
+
+        // getting the category of the event
+        // If the category is not set in the request, you might want to handle it here
+        if (event.getCategoryId() != null) {
+            newEvent.setCategory(eventCategoryService.getCategoryById(event.getCategoryId()));
+        }else{
+            throw new RuntimeException("Category ID is required to create an event");
+        }
+
+        // set the organizer and save the event
         newEvent.setOrganizer(organizer);
         eventRepository.save(newEvent);
         return eventMapper.mapToEventResponse(newEvent);
     }
 
     @Override
-    public EventResponse updateEvent(Long id, EventUpdateRequest request) throws RuntimeException {
-        Event existingEvent = eventRepository.findById(id).orElseThrow(
-                () -> new EventNotFoundException("Event not found with id: " + id)
-        ) ; // throws if not found
+    public EventResponse updateEvent(Long id, EventUpdateRequest request) {
+        // Fetch the event or throw exception if not found
+        Event existingEvent = eventRepository.findById(id)
+                .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
 
-        // Check if the authenticated user is the organizer of the event
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User authenticatedUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-        if (!existingEvent.getOrganizer().getId().equals(authenticatedUser.getId())) {
+        // Get currently authenticated user
+        User authenticatedUser = securityUtils.getCurrentUser();
+
+        // Only the organizer is allowed to update the event
+        if (!existingEvent.getOrganizer().getId().equals(authenticatedUser.getId()) &&
+                !authenticatedUser.getRole().getName().equals("ADMIN")) {
             throw new RuntimeException("You are not authorized to update this event");
         }
 
-        if (request.getName() != null) {
-            existingEvent.setName(request.getName());
-        }
-        if (request.getDescription() != null) {
-            existingEvent.setDescription(request.getDescription());
-        }
-        if (request.getAvailableSeats() != null) {
-            existingEvent.setAvailableSeats(request.getAvailableSeats());
-        }
-        if (request.getLocation() != null) {
-            existingEvent.setLocation(request.getLocation());
-        }
-        if (request.getPricePerTicket() != null) {
-            existingEvent.setPricePerTicket(request.getPricePerTicket());
-        }
-        if (request.getIsOnline() != null) {
-            existingEvent.setOnline(request.getIsOnline());
-        }
-        if (request.getEventImageUrl() != null) {
-            existingEvent.setEventImageUrl(request.getEventImageUrl());
-        }
-        eventRepository.save(existingEvent);
 
+        // Update fields
+        existingEvent.setName(request.getName());
+        existingEvent.setDescription(request.getDescription());
+        existingEvent.setStartTime(request.getStartTime());
+        existingEvent.setEndTime(request.getEndTime());
+        existingEvent.setAvailableSeats(request.getAvailableSeats());
+        existingEvent.setLocation(request.getLocation());
+        existingEvent.setPricePerTicket(request.getPricePerTicket());
+        existingEvent.setOnline(request.getIsOnline());
+        existingEvent.setEventImageUrl(request.getEventImageUrl());
+
+        // Optional: update category if provided
+        if (request.getCategoryId() != null) {
+            EventCategory category = eventCategoryService.getCategoryById(request.getCategoryId());
+            existingEvent.setCategory(category);
+        }
+
+
+        // Save and return response
+        eventRepository.save(existingEvent);
         return eventMapper.mapToEventResponse(existingEvent);
     }
+
 
 
     @Override
@@ -102,14 +117,17 @@ public class EventServiceImpl implements EventService {
                 () -> new EventNotFoundException("Event not found with id: " + id)
         );
 
-        // Check if the authenticated user is the organizer of the event
-        String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User authenticatedUser = userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException("User not found with email: " + email));
-        if (!event.getOrganizer().getId().equals(authenticatedUser.getId())) {
-            throw new RuntimeException("You are not authorized to delete this event");
-
+        if (bookingRepository.existsByEventId(id)) {
+            throw new IllegalStateException("Cannot delete event. Tickets have already been issued.");
         }
+
+        // Check if the authenticated user is the organizer of the event
+        User authenticatedUser = securityUtils.getCurrentUser();
+        if (!event.getOrganizer().getId().equals(authenticatedUser.getId()) &&
+                !authenticatedUser.getRole().getName().equals("ADMIN")) {
+            throw new RuntimeException("You are not authorized to delete this event");
+        }
+
         eventRepository.delete(event);
 
     }
@@ -145,7 +163,6 @@ public class EventServiceImpl implements EventService {
         }
         return eventMapper.mapToEventResponse(events);
     }
-
 
 
 }

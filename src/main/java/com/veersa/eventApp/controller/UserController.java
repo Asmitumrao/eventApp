@@ -6,10 +6,7 @@ import com.veersa.eventApp.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/users")
@@ -20,9 +17,9 @@ public class UserController {
     @Autowired
     private final UserService userService;
 
-    @GetMapping("/{id}")
-    public ResponseEntity<UserResponse> getUserById(@PathVariable Long id) {
-        UserResponse userResponse = userService.getUserById(id);
+    @GetMapping()
+    public ResponseEntity<UserResponse> getUserById() {
+        UserResponse userResponse = userService.getUserById();
         return ResponseEntity.ok(userResponse);
     }
 }

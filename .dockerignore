@@ -1,0 +1,6 @@
+target/*.original
+target/*.jar.original
+*.iml
+.idea/
+*.md
+.git/

@@ -42,6 +42,7 @@ public class RazorpayPaymentService implements PaymentService {
                 .paymentLink(payment.get("short_url"))
                 .ammount(amountInRupees)
                 .message("Payment link created successfully")
+                .BookingId(bookingId.toString())
                 .build();
 
         return paymentResponse;

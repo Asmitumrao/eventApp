@@ -26,6 +26,7 @@ public class PDFGenerator {
             PdfWriter.getInstance(document, response.getOutputStream());
             document.open();
 
+
             for (Ticket ticket : booking.getTickets()) {
                 document.add(new Paragraph("Ticket Number: " + ticket.getTicketNumber()));
                 document.add(new Paragraph("Event: " + ticket.getEvent().getName()));

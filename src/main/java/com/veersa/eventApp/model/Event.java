@@ -42,7 +42,7 @@ public class Event {
     private String eventImageUrl;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organizer_id", nullable = false)
+    @JoinColumn(name = "organizer_id")
     private User organizer;
 
     @ManyToOne(fetch = FetchType.LAZY)
@@ -57,4 +57,6 @@ public class Event {
 
     @UpdateTimestamp
     private LocalDateTime updatedAt;
+
+
 }

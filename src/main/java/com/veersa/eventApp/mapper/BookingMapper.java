@@ -10,7 +10,7 @@ import org.springframework.stereotype.Component;
 
 import java.util.List;
 
-@Lazy
+
 @Component
 public class BookingMapper {
 

@@ -3,12 +3,14 @@ package com.veersa.eventApp.controller;
 
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
+import com.veersa.eventApp.DTO.PaymentResponse;
 import com.veersa.eventApp.mapper.BookingMapper;
 import com.veersa.eventApp.model.Booking;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.security.UserDetailsImpl;
 import com.veersa.eventApp.service.BookingService;
 import com.veersa.eventApp.util.SecurityUtils;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -28,11 +30,15 @@ public class BookingController {
     private final SecurityUtils securityUtils;
 
 
+    @PostMapping("/initiateBooking")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<PaymentResponse> initiateBooking(@RequestBody BookingRequest request) {
+        return ResponseEntity.ok(bookingService.initiateBooking(request));
+    }
 
     // get all bookings for the current user
     @GetMapping
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
-
         Long userId= securityUtils.getCurrentUserId();
         return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
     }

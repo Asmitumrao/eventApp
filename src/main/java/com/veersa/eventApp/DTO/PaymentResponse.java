@@ -8,6 +8,7 @@ import lombok.Data;
 @Data
 public class PaymentResponse {
 
+    private  String BookingId;
     private  String paymentLink;
     private  String message;
     private  String paymentId;

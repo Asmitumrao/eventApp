@@ -19,8 +19,10 @@ public class EventMapper {
         event.setLocation(request.getLocation());
         event.setAvailableSeats(request.getAvailableSeats());
         event.setPricePerTicket(request.getPricePerTicket());
-        event.setOnline(request.isOnline());
+        event.setOnline(request.getIsOnline());
         event.setEventImageUrl(request.getEventImageUrl());
+
+
         return event;
     }
 

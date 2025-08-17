@@ -11,6 +11,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
@@ -85,14 +88,33 @@ public class NotificationServiceImpl implements NotificationService {
         mailSender(to, subject, body);
     }
 
+//    private void mailSender(String to, String subject, String body) {
+//        EmailRequest emailRequest = new EmailRequest(to, subject, body);
+//
+//        ResponseEntity<String> result = restTemplate.postForEntity(
+//                "http://localhost:8081/api/email/send",
+//                emailRequest,
+//                String.class
+//        );
+//        System.out.println("Email sent successfully: " + result.getBody());
+//    }
+
     private void mailSender(String to, String subject, String body) {
         EmailRequest emailRequest = new EmailRequest(to, subject, body);
 
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        headers.set("X-API-KEY", "9b73f8d8c1e647d7b9ab02d34992f48b58ff7b3c87a9f1a2d3c7b81e9d4f0a6c"); // store in env var
+
+        HttpEntity<EmailRequest> request = new HttpEntity<>(emailRequest, headers);
+
         ResponseEntity<String> result = restTemplate.postForEntity(
                 "http://localhost:8081/api/email/send",
-                emailRequest,
+                request,
                 String.class
         );
+
         System.out.println("Email sent successfully: " + result.getBody());
     }
+
 }
