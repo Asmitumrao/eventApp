@@ -40,4 +40,6 @@ public class SecurityUtils {
     public Long getCurrentUserId() {
         return getCurrentUser().getId();
     }
+
+
 }

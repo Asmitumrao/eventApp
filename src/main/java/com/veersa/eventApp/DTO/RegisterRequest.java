@@ -6,8 +6,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
-@Data
+@Getter
+@Setter
 public class RegisterRequest {
 
     @NotBlank(message = "Username is required")
@@ -25,4 +28,10 @@ public class RegisterRequest {
 
     @NotBlank(message = "Role is required")
     private String role; // Optional: or default it in service layer
+
+
+    @Override
+    public String toString() {
+        return "RegisterRequest(username=" + username + ", email=" + email + ", password=PROTECTED, role=" + role + ")";
+    }
 }

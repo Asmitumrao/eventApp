@@ -4,9 +4,7 @@ import com.veersa.eventApp.DTO.AuthRequest;
 import com.veersa.eventApp.DTO.AuthResponse;
 import com.veersa.eventApp.DTO.ChangePasswordRequest;
 import com.veersa.eventApp.DTO.RegisterRequest;
-import com.veersa.eventApp.exception.IncorrectPasswordException;
-import com.veersa.eventApp.exception.PasswordMismatchException;
-import com.veersa.eventApp.exception.UserNotFoundException;
+import com.veersa.eventApp.exception.*;
 import com.veersa.eventApp.model.Role;
 import com.veersa.eventApp.model.User;
 import com.veersa.eventApp.respository.RoleRepository;
@@ -39,20 +37,20 @@ public class AuthServiceImpl implements AuthService {
 
 
     @Override
-    public ResponseEntity<?> register(RegisterRequest request) {
+    public AuthResponse register(RegisterRequest request) {
 
         // check if user already exists
         if(userRepository.findByEmail(request.getEmail()).isPresent()){
-            return ResponseEntity.badRequest().body("User already exists");
+            throw new UserAlreadyPresentException("User with email " + request.getEmail() + " already exists");
         }
 
         // Find role from DB
         Role role = roleRepository.findByName("ROLE_" + request.getRole().toUpperCase())
-                .orElseThrow(() -> new RuntimeException("Role not found: " + request.getRole()));
+                .orElseThrow(() -> new UserRoleException("Role not found: " + request.getRole()));
 
-        //check if role is Not Admin and null
-        if (role == null || role.getName().equals("ROLE_ADMIN")) {
-            return ResponseEntity.badRequest().body("Invalid role. Only 'USER' and 'ORGANIZER' role is allowed for registration.");
+        //check if role is Not Admin
+        if (role.getName().equals("ROLE_ADMIN")) {
+            throw new UserRoleException("Invalid role: " + request.getRole() + ". Only ORGANIZER or USER roles are allowed.");
         }
 
         // Create new user
@@ -64,11 +62,20 @@ public class AuthServiceImpl implements AuthService {
 
         // Save user to the database
         userRepository.save(user);
-        return ResponseEntity.ok("User registered successfully");
+
+
+        // call login method to generate token
+        AuthRequest authRequest = new AuthRequest();
+        authRequest.setEmail(request.getEmail());
+        authRequest.setPassword(request.getPassword());
+
+        // Return the login response
+        return  login(authRequest);
+
     }
 
     @Override
-    public ResponseEntity<?> login(AuthRequest authRequest) {
+    public AuthResponse login(AuthRequest authRequest) {
         try {
             Authentication auth = authenticationManager.authenticate(
                     new UsernamePasswordAuthenticationToken(
@@ -79,12 +86,19 @@ public class AuthServiceImpl implements AuthService {
 
             UserDetails userDetails = (UserDetails) auth.getPrincipal();
             String token = jwtUtil.generateToken(userDetails);
-            AuthResponse authResponse = new AuthResponse(token);
-            return ResponseEntity.ok(authResponse);
+            User user = userRepository.findByEmail(authRequest.getEmail())
+                    .orElseThrow(() -> new UserNotFoundException("User not found"));
+            AuthResponse authResponse = new AuthResponse(
+                    token,
+                    user.getEmail(),
+                    user.getUsername(),
+                    user.getRole().getName(),
+                    user.getId()
+            );
+            return authResponse;
 
         } catch (BadCredentialsException e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body("Invalid email or password");
+            throw new IncorrectPasswordException("Invalid email or password");
         }
     }
 

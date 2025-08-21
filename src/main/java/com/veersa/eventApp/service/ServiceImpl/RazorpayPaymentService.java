@@ -3,25 +3,32 @@ package com.veersa.eventApp.service.ServiceImpl;
 import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayClient;
 import com.razorpay.RazorpayException;
-import com.veersa.eventApp.DTO.PaymentResponse;
+import com.razorpay.Refund;
+import com.veersa.eventApp.model.Booking;
+import com.veersa.eventApp.model.BookingStatus;
+import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.service.PaymentService;
+import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.json.JSONArray;
 import org.json.JSONObject;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 @Service
-@Slf4j
 public class RazorpayPaymentService implements PaymentService {
 
     private final RazorpayClient razorpayClient;
+    private final BookingRepository bookingRepository;
 
     public RazorpayPaymentService(@Value("${razorpay.key}") String key,
-                                  @Value("${razorpay.secret}") String secret) throws RazorpayException {
+                                  @Value("${razorpay.secret}") String secret, BookingRepository bookingRepository) throws RazorpayException {
+        this.bookingRepository = bookingRepository;
         this.razorpayClient = new RazorpayClient(key, secret);
     }
 
-    public PaymentResponse createPaymentLink(int amountInRupees, String email, String contact, Long bookingId) throws RazorpayException {
+    @Override
+    public PaymentLink createPaymentLink(Double amountInRupees, String email, String contact, Long bookingId) throws RazorpayException {
 
         JSONObject payload = new JSONObject();
         payload.put("amount", amountInRupees * 100); // in paise
@@ -32,20 +39,18 @@ public class RazorpayPaymentService implements PaymentService {
                 .put("email", email)
                 .put("contact", contact)
         );
-//        payload.put("callback_url", "http://localhost:8080/api/payment/verify?bookingId=" + bookingId);
-//        payload.put("callback_method", "get");
 
-        PaymentLink payment = razorpayClient.paymentLink.create(payload);
+        return razorpayClient.paymentLink.create(payload);
 
-        PaymentResponse paymentResponse =PaymentResponse.builder()
-                .paymentId(payment.get("id"))
-                .paymentLink(payment.get("short_url"))
-                .ammount(amountInRupees)
-                .message("Payment link created successfully")
-                .BookingId(bookingId.toString())
-                .build();
-
-        return paymentResponse;
+//        PaymentResponse paymentResponse =PaymentResponse.builder()
+//                .paymentId(payment.get("id"))
+//                .paymentLink(payment.get("short_url"))
+//                .ammount(amountInRupees)
+//                .message("Payment link created successfully")
+//                .BookingId(bookingId.toString())
+//                .build();
+//
+//        return paymentResponse;
     }
 
     @Override
@@ -56,16 +61,79 @@ public class RazorpayPaymentService implements PaymentService {
 
             if(!json.isNull("status") && json.getString("status").equals("paid")) {
                 // Payment is successful, you can update your booking status here
-                log.info("Payment successful for booking ID: {}", bookingId);
+//                loger.info("Payment successful for booking ID: {}", bookingId);
                 return true;
             }
             return false;
         }
         catch (Exception e) {
-            log.error("Error verifying payment: {}", e.getMessage());
+//            log.error("Error verifying payment: {}", e.getMessage());
             throw new RazorpayException("Payment verification failed", e);
         }
     }
+
+//    @Override
+    @Transactional
+    public void refundPayment(Long bookingId) {
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found"));
+
+        if (booking.getStatus().equals(BookingStatus.PENDING) || booking.getStatus().equals(BookingStatus.CANCELLED)) {
+            throw new RuntimeException("Booking is not eligible for refund");
+        }
+
+        if (booking.getRefundId() != null) {
+            throw new RuntimeException("Refund already processed for this booking");
+        }
+
+        try {
+            JSONObject refundRequest = new JSONObject();
+            refundRequest.put("amount", booking.getAmount() * 100); // amount in paise
+
+            // Call Razorpay refund API
+            String paymentId = getPaymentId(booking.getPaymentId());
+            Refund refund = razorpayClient.payments.refund(paymentId, refundRequest);
+
+            booking.setStatus(BookingStatus.REFUND_INITIATED);
+            booking.setRefundId(refund.get("id")); // Assuming refund ID is retrieved with "id" key
+            bookingRepository.save(booking);
+//            log.info("Refund initiated for booking ID: {}", bookingId);
+
+        } catch (Exception e) {
+            System.out.println("Refund failed for booking ID: " + booking.getId() + ", Error: " + e.getMessage());
+//            log.error("Refund failed for booking ID: " + booking.getId(), e);
+        }
+    }
+
+    public String getPaymentId(String paymentLinkId) throws RazorpayException {
+        try {
+            // Fetch payment link details
+            PaymentLink paymentLink = razorpayClient.paymentLink.fetch(paymentLinkId);
+            System.out.println("Payment Link Details: " + paymentLink.toString());
+            JSONObject paymentLinkJson = new JSONObject(paymentLink.toString());
+
+            // Check if payments exist
+            if (paymentLinkJson.has("payments")) {
+                JSONArray payments = paymentLinkJson.getJSONArray("payments");
+
+                // Look for the first successful payment
+                for (int i = 0; i < payments.length(); i++) {
+                    JSONObject payment = payments.getJSONObject(i);
+                    String status = payment.getString("status");
+
+                    // Return payment ID if status is captured (successful)
+                    if ("captured".equals(status)) {
+                        return payment.getString("payment_id");
+                    }
+                }
+            }
+            return null; // No successful payment found
+
+        } catch (Exception e) {
+            throw new RazorpayException("Failed to get payment ID: " + e.getMessage());
+        }
+    }
+
 
 
 }

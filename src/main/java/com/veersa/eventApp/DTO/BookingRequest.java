@@ -10,7 +10,7 @@ import java.util.List;
 @Data
 public class BookingRequest {
 
-    @NotBlank(message = "Event ID cannot be blank")
+    @NotNull(message = "Event ID cannot be blank")
     private Long eventId;
 
     @NotBlank(message = "User Email is required and cannot be blank")
@@ -19,9 +19,9 @@ public class BookingRequest {
     @NotBlank(message = "User Name is required and cannot be blank")
     private String userPhone;
 
-    @NotBlank(message = "User Name is required and cannot be blank")
-    @Size(min = 1, message = "Number of seats must be at least 1")
-    private int numberOfSeats;
+
+    @NotNull(message = "Number of seats cannot be null")
+    private Integer  numberOfSeats;
 
     private List<AttendeeRequest> attendees;
 }

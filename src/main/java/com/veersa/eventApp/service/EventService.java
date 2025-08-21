@@ -18,4 +18,7 @@ public interface EventService {
     List<EventResponse> filterAndSearchEvents(EventSearchRequest request);
     public List<EventResponse> getEventsByUserId(Long userId);
     List<EventResponse> getEventsByCategoryId(Long categoryId);
+    List<EventResponse> getUpcomingEvents();
+    List<EventResponse> getPastEvents();
+
 }

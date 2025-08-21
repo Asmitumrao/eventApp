@@ -1,5 +1,7 @@
 package com.veersa.eventApp.service.ServiceImpl;
 
+import com.itextpdf.text.pdf.PdfStructureElement;
+import com.razorpay.PaymentLink;
 import com.razorpay.RazorpayException;
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
@@ -7,6 +9,7 @@ import com.veersa.eventApp.DTO.PaymentResponse;
 import com.veersa.eventApp.exception.BookingNotFoundException;
 import com.veersa.eventApp.exception.EventNotFoundException;
 import com.veersa.eventApp.exception.UserNotFoundException;
+import com.veersa.eventApp.respository.TicketRepository;
 import com.veersa.eventApp.service.PaymentService;
 import com.veersa.eventApp.mapper.BookingMapper;
 import com.veersa.eventApp.model.*;
@@ -18,16 +21,17 @@ import com.veersa.eventApp.service.NotificationService;
 import com.veersa.eventApp.util.SecurityUtils;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import lombok.extern.slf4j.Slf4j;
+
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
-import java.sql.PseudoColumnUsage;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class BookingServiceImpl implements BookingService {
@@ -40,7 +44,7 @@ public class BookingServiceImpl implements BookingService {
     private  final NotificationService notificationService;
     private final PaymentService paymentService;
     private  final SecurityUtils securityUtils;
-
+    private final TicketRepository ticketRepository;
 
 
     @Override
@@ -49,18 +53,33 @@ public class BookingServiceImpl implements BookingService {
             // 1. Save booking in pending state (do not reduce seats or confirm)
             Booking pendingBooking = savePendingBooking(request);
 
-            // ammount in paise
-            int amountInRupees = new BigDecimal(pendingBooking.getEvent().getPricePerTicket())
-                    .multiply(BigDecimal.valueOf(request.getNumberOfSeats()))
-                    .intValue();
+            // ammount in rupees
+            Double amountInRupees = new BigDecimal(pendingBooking.getEvent().getPricePerTicket())
+                    .multiply(BigDecimal.valueOf(request.getNumberOfSeats())).doubleValue();
 
-            // 2. Generate payment link
-            return  paymentService.createPaymentLink(
-                    amountInRupees, // Example amount in rupees
+            // get payment link
+            PaymentLink paymentLink = paymentService.createPaymentLink(
+                    amountInRupees,
                     request.getUserEmail(),
                     request.getUserPhone(),
                     pendingBooking.getId()
-            ) ;
+            );
+
+            pendingBooking.setAmount(amountInRupees);
+            pendingBooking.setPaymentId(paymentLink.get("id").toString());
+            bookingRepository.save(pendingBooking);
+
+            // 2. Return payment link to the user
+            PaymentResponse paymentResponse =PaymentResponse.builder()
+                .paymentId(paymentLink.get("id"))
+                .paymentLink(paymentLink.get("short_url"))
+                .ammount(amountInRupees)
+                .message("Payment link created successfully")
+                .BookingId(pendingBooking.getId().toString())
+                .build();
+
+
+            return paymentResponse;
         } catch (RazorpayException e) {
             throw new RuntimeException("Error creating payment link: " + e.getMessage());
         }
@@ -68,13 +87,16 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public Booking savePendingBooking(BookingRequest request) {
-
         // Validate user and event existence
         User user = securityUtils.getCurrentUser();
-
         // Check if the event exists and has available seats
         Event event = eventRepository.findById(request.getEventId())
                 .orElseThrow(() -> new EventNotFoundException("Event not found"));
+
+
+        if(event.getStatus().equals(EventStatus.CANCELLED)){
+            throw new EventNotFoundException("Event is cancelled and not available for booking");
+        }
 
         if (event.getAvailableSeats() < request.getNumberOfSeats()) {
             throw new RuntimeException(request.getNumberOfSeats() + " seats available for this event");
@@ -97,12 +119,14 @@ public class BookingServiceImpl implements BookingService {
     @Override
     @Transactional
     public boolean verifyPaymentAndConfirm(Long bookingId,String paymentId) throws RazorpayException {
+
         //Verify payment via Razorpay API or trust callback if secure
         boolean paymentCheck =  paymentService.verifyPayment(paymentId,bookingId);
         if(paymentCheck == false) {
             System.out.println("Payment verification failed for booking ID: " + bookingId); // Debugging line
             return false;
         }
+
         // Fetch and confirm the booking
         Booking booking = bookingRepository.findById(bookingId).orElseThrow(
                 () -> new BookingNotFoundException("Booking not found with id: " + bookingId));
@@ -165,26 +189,20 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public String cancelBooking(Long bookingId) {
 
         Booking booking = bookingRepository.findById(bookingId)
-                .orElseThrow(() -> new EventNotFoundException("Booking not found with id: " ));
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + bookingId));
 
-        // only the user who has booked can cancel
         User user = securityUtils.getCurrentUser();
+        // Check if the user is authorized to cancel this booking
+
         if (!booking.getUser().getId().equals(user.getId()) && !user.getRole().getName().equals("ROLE_ADMIN")) {
             throw new RuntimeException("You are not authorized to cancel this booking");
         }
-
-        // Restore available seats in the event
-        Event event = booking.getEvent();
-        event.setAvailableSeats(event.getAvailableSeats() + booking.getNumberOfSeats());
-        eventRepository.save(event);
-        // Delete the booking
-        bookingRepository.delete(booking);
-        // Notify the user about the booking cancellation
-        notificationService.bookingCancelledNotification(bookingId);
-        return "Booking with ID " + bookingId + " has been cancelled successfully.";
+        deleteBooking(bookingId);
+        return "Booking cancelled successfully";
 
     }
 
@@ -214,5 +232,47 @@ public class BookingServiceImpl implements BookingService {
 
         }
         return tickets;
+    }
+
+    @Transactional
+    @Override
+    public Void deleteBooking(Long bookingId) {
+        // Check if the booking exists
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new BookingNotFoundException("Booking not found with id: " + bookingId));
+        if (booking == null) {
+            throw new BookingNotFoundException("Booking not found");
+        }
+
+        // Check if the booking is already cancelled or refunded
+        if (booking.getStatus().equals(BookingStatus.CANCELLED)) {
+            throw new RuntimeException("Booking is already cancelled or refunded");
+        }
+
+        // Set the booking status to cancelled
+        booking.setStatus(BookingStatus.CANCELLED);
+        bookingRepository.save(booking);
+
+        // Restore available seats in the event
+        Event event = booking.getEvent();
+        event.setAvailableSeats(event.getAvailableSeats() + booking.getNumberOfSeats());
+        eventRepository.save(event);
+
+        // delete the tickets associated with this booking
+        ticketRepository.deleteByBookingId(booking.getId());
+
+        // Notify the user about the cancellation
+        notificationService.bookingCancelledNotification(booking.getId());
+        return null;
+    }
+
+    @Override
+    public List<BookingResponse> getCancelledBookingsByUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new UserNotFoundException("User not found with id: " + userId));
+
+        List<Booking> cancelledBookings = bookingRepository.findCancelledBookingsByUser(user);
+        return bookingMapper.mapToBookingResponse(cancelledBookings);
     }
 }

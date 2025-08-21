@@ -25,6 +25,9 @@ public class BookingMapper {
         dto.setUsername(booking.getUser().getUsername());
         dto.setNumberOfSeats(booking.getNumberOfSeats());
         dto.setEmail(booking.getUser().getEmail());
+        dto.setStatus(booking.getStatus().toString());
+        dto.setEventVenue(booking.getEvent().getLocation());
+
 
         List<TicketDTO> ticketDTOs = booking.getTickets().stream().map(ticket -> {
             TicketDTO ticketDTO = new TicketDTO();

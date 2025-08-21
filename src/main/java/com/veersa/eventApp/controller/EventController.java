@@ -5,6 +5,7 @@ import com.veersa.eventApp.DTO.EventCreateRequest;
 import com.veersa.eventApp.DTO.EventResponse;
 import com.veersa.eventApp.DTO.EventSearchRequest;
 import com.veersa.eventApp.DTO.EventUpdateRequest;
+import com.veersa.eventApp.service.EventService;
 import com.veersa.eventApp.service.ServiceImpl.EventServiceImpl;
 import com.veersa.eventApp.util.SecurityUtils;
 import jakarta.validation.Valid;
@@ -22,7 +23,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class EventController {
 
-    private final EventServiceImpl eventService;
+    private final EventService eventService;
     private final SecurityUtils securityUtils;
 
     // Public: Get all events
@@ -30,6 +31,20 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getAllEvents() {
         return ResponseEntity.ok(eventService.getAllEvents());
     }
+
+    // Public: Get upcoming events
+    @GetMapping("/upcoming")
+    public ResponseEntity<List<EventResponse>> getUpcomingEvents() {
+        return ResponseEntity.ok(eventService.getUpcomingEvents());
+    }
+
+    // Public: Get past events
+    @GetMapping("/past")
+    public ResponseEntity<List<EventResponse>> getPastEvents() {
+        return ResponseEntity.ok(eventService.getPastEvents());
+    }
+
+    
 
     // Get single event by ID
     @GetMapping("/{id}")
@@ -89,6 +104,7 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getEventsByCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(eventService.getEventsByCategoryId(categoryId));
     }
+
 
 
 }

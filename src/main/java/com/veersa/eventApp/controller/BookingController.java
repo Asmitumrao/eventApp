@@ -1,6 +1,7 @@
 package com.veersa.eventApp.controller;
 
 
+import com.veersa.eventApp.DTO.ApiResponse;
 import com.veersa.eventApp.DTO.BookingRequest;
 import com.veersa.eventApp.DTO.BookingResponse;
 import com.veersa.eventApp.DTO.PaymentResponse;
@@ -32,16 +33,27 @@ public class BookingController {
 
     @PostMapping("/initiateBooking")
     @PreAuthorize("hasAnyRole('USER')")
-    public ResponseEntity<PaymentResponse> initiateBooking(@RequestBody BookingRequest request) {
+    public ResponseEntity<PaymentResponse> initiateBooking(@Valid @RequestBody BookingRequest request) {
         return ResponseEntity.ok(bookingService.initiateBooking(request));
     }
 
     // get all bookings for the current user
     @GetMapping
+    @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<List<BookingResponse>> getAllBookings() {
         Long userId= securityUtils.getCurrentUserId();
         return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
     }
+
+    // get cancelled bookings for the current user
+    @GetMapping
+    @RequestMapping("/cancelled")
+    @PreAuthorize("hasAnyRole('USER')")
+    public ResponseEntity<List<BookingResponse>> getCancelledBookings() {
+        Long userId = securityUtils.getCurrentUserId();
+        return ResponseEntity.ok(bookingService.getCancelledBookingsByUser(userId));
+    }
+
 
 
     // ✅ Cancel a booking
@@ -49,7 +61,8 @@ public class BookingController {
     @PreAuthorize("hasAnyRole('USER', 'ADMIN')")
     public ResponseEntity<?> cancelBooking(@PathVariable Long id) {
         bookingService.cancelBooking(id);
-        return ResponseEntity.ok("Booking cancelled successfully");
+        return ResponseEntity.ok(new ApiResponse("Booking cancelled successfully"));
+
     }
 
 

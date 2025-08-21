@@ -33,4 +33,17 @@ public interface EventRepository extends JpaRepository<Event,Long> {
     boolean existsByCategoryId(Long categoryId);
 
 
+    @Query("SELECT e FROM Event e WHERE e.startTime >= CURRENT_TIMESTAMP  AND e.status != 'CANCELLED' ORDER BY e.startTime ASC")
+    List<Event> findUpcomingEvents();
+
+    @Query("SELECT e FROM Event e WHERE e.startTime < CURRENT_TIMESTAMP AND e.status != 'CANCELLED' ORDER BY e.startTime DESC")
+    List<Event> findPastEvents();
+
+    @Query("SELECT e FROM Event e WHERE e.status = 'CANCELLED'")
+    List<Event> findCancelledEvents();
+
+    @Query("SELECT e FROM Event e WHERE e.status = 'SCHEDULED'  ")
+    List<Event> findScheduledEvents();
+
+
 }

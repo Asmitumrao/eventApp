@@ -1,15 +1,11 @@
 package com.veersa.eventApp.service.ServiceImpl;
 
-import com.veersa.eventApp.DTO.EventCreateRequest;
-import com.veersa.eventApp.DTO.EventResponse;
-import com.veersa.eventApp.DTO.EventSearchRequest;
-import com.veersa.eventApp.DTO.EventUpdateRequest;
+import com.veersa.eventApp.DTO.*;
 import com.veersa.eventApp.exception.EventNotFoundException;
 import com.veersa.eventApp.exception.UserNotFoundException;
 import com.veersa.eventApp.mapper.EventMapper;
-import com.veersa.eventApp.model.Event;
-import com.veersa.eventApp.model.EventCategory;
-import com.veersa.eventApp.model.User;
+import com.veersa.eventApp.messaging.RefundProducer;
+import com.veersa.eventApp.model.*;
 import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.respository.EventRepository;
 import com.veersa.eventApp.respository.UserRepository;
@@ -17,15 +13,15 @@ import com.veersa.eventApp.service.EventCategoryService;
 import com.veersa.eventApp.service.EventService;
 import com.veersa.eventApp.util.SecurityUtils;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.context.annotation.Primary;
 import org.springframework.stereotype.Service;
-
 import java.util.List;
 
-@Service
-@RequiredArgsConstructor
-public abstract class EventServiceImpl implements EventService {
 
+@RequiredArgsConstructor
+@Service
+@Primary
+public class EventService2 implements EventService {
 
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -33,6 +29,7 @@ public abstract class EventServiceImpl implements EventService {
     private final SecurityUtils securityUtils;
     private final EventCategoryService eventCategoryService;
     private final BookingRepository bookingRepository;
+    private final RefundProducer refundProducer;
 
     @Override
     public List<EventResponse> getAllEvents() {
@@ -43,6 +40,10 @@ public abstract class EventServiceImpl implements EventService {
     public EventResponse getEventById(Long id) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new EventNotFoundException("Event not found with id: " + id));
+
+        if(event.getStatus().equals(EventStatus.CANCELLED)){
+            throw new EventNotFoundException("Event is cancelled and not available for viewing");
+        }
         return eventMapper.mapToEventResponse(event);
     }
 
@@ -117,8 +118,8 @@ public abstract class EventServiceImpl implements EventService {
                 () -> new EventNotFoundException("Event not found with id: " + id)
         );
 
-        if (bookingRepository.existsByEventId(id)) {
-            throw new IllegalStateException("Cannot delete event. Tickets have already been issued.");
+        if(event.getStatus().equals(EventStatus.CANCELLED)) {
+            throw new RuntimeException("Event is already cancelled");
         }
 
         // Check if the authenticated user is the organizer of the event
@@ -128,7 +129,22 @@ public abstract class EventServiceImpl implements EventService {
             throw new RuntimeException("You are not authorized to delete this event");
         }
 
-        eventRepository.delete(event);
+        List<Booking> bookings = bookingRepository.findByEvent(event);
+
+        // Send refund messages for each booking
+        for (Booking booking : bookings) {
+            booking.setStatus(BookingStatus.PENDING_REFUND);
+            RefundMessage refundMessage = new RefundMessage(
+                    booking.getId(),
+                    booking.getUser().getId(),
+                    booking.getAmount() // In Rupees
+            );
+            refundProducer.sendRefund(refundMessage);
+        }
+
+        // mark the event as deleted
+        event.setStatus(EventStatus.CANCELLED);
+        eventRepository.save(event);
 
     }
 
@@ -164,5 +180,14 @@ public abstract class EventServiceImpl implements EventService {
         return eventMapper.mapToEventResponse(events);
     }
 
+    @Override
+    public List<EventResponse> getUpcomingEvents() {
+        return eventMapper.mapToEventResponse(eventRepository.findUpcomingEvents());
+    }
+
+    @Override
+    public List<EventResponse> getPastEvents() {
+        return eventMapper.mapToEventResponse(eventRepository.findPastEvents());
+    }
 
 }

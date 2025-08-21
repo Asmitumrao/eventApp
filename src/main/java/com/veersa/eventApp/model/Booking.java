@@ -48,10 +48,30 @@ public class Booking {
     @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
     private List<Ticket> tickets;
 
+    @Column(name = "payment_id")
+    private String paymentId;
+
+    @Column(name = "payment_status")
+    private String paymentStatus;
+
+    @Column(name = "amount")
+    private Double amount; // Amount in rupees
+
+    @Column(name ="refund_id")
+    private String refundId;
+
+    @Column(name = "expires_at")
+    private LocalDateTime expiresAt;
+
     @PrePersist
     public void onCreate() {
         this.bookingTime = LocalDateTime.now();
+        if (this.expiresAt == null) {
+            this.expiresAt = this.bookingTime.plusMinutes(2); // Default expiry time of 10 minutes
+        }
     }
+
+
 
 }
 

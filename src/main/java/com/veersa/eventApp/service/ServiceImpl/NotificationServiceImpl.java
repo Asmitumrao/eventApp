@@ -2,6 +2,7 @@ package com.veersa.eventApp.service.ServiceImpl;
 
 import com.veersa.eventApp.DTO.EmailRequest;
 import com.veersa.eventApp.exception.BookingNotFoundException;
+import com.veersa.eventApp.feign.EmailerClient;
 import com.veersa.eventApp.model.Booking;
 import com.veersa.eventApp.respository.BookingRepository;
 import com.veersa.eventApp.service.BookingService;
@@ -15,20 +16,19 @@ import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
+
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @RequiredArgsConstructor
 public class NotificationServiceImpl implements NotificationService {
 
 
-    private final RestTemplate restTemplate;
+    private final EmailerClient emailerClient;
     private final BookingRepository bookingRepository;
-
-    @Value("${notification.service.url}")
-    private static String NOTIFICATION_SERVICE_URL;
-
 
 
     @Override
@@ -47,6 +47,8 @@ public class NotificationServiceImpl implements NotificationService {
                 "Thank you for your booking!\n\n" +
                 "Best regards,\n" +
                 "EventApp Team";
+
+
         mailSender(to, subject, body);
     }
 
@@ -88,33 +90,30 @@ public class NotificationServiceImpl implements NotificationService {
         mailSender(to, subject, body);
     }
 
+
+//
 //    private void mailSender(String to, String subject, String body) {
 //        EmailRequest emailRequest = new EmailRequest(to, subject, body);
 //
+//        HttpHeaders headers = new HttpHeaders();
+//        headers.setContentType(MediaType.APPLICATION_JSON);
+//        headers.set("X-API-KEY", "9b73f8d8c1e647d7b9ab02d34992f48b58ff7b3c87a9f1a2d3c7b81e9d4f0a6c"); // store in env var
+//
+//        HttpEntity<EmailRequest> request = new HttpEntity<>(emailRequest, headers);
+//
 //        ResponseEntity<String> result = restTemplate.postForEntity(
 //                "http://localhost:8081/api/email/send",
-//                emailRequest,
+//                request,
 //                String.class
 //        );
+//
 //        System.out.println("Email sent successfully: " + result.getBody());
 //    }
 
-    private void mailSender(String to, String subject, String body) {
+    public void mailSender(String to, String subject, String body) {
         EmailRequest emailRequest = new EmailRequest(to, subject, body);
-
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.APPLICATION_JSON);
-        headers.set("X-API-KEY", "9b73f8d8c1e647d7b9ab02d34992f48b58ff7b3c87a9f1a2d3c7b81e9d4f0a6c"); // store in env var
-
-        HttpEntity<EmailRequest> request = new HttpEntity<>(emailRequest, headers);
-
-        ResponseEntity<String> result = restTemplate.postForEntity(
-                "http://localhost:8081/api/email/send",
-                request,
-                String.class
-        );
-
-        System.out.println("Email sent successfully: " + result.getBody());
+        emailerClient.sendEmail(emailRequest);
     }
+
 
 }

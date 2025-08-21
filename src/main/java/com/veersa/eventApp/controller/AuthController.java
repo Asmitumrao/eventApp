@@ -2,6 +2,7 @@ package com.veersa.eventApp.controller;
 
 
 import com.veersa.eventApp.DTO.AuthRequest;
+import com.veersa.eventApp.DTO.AuthResponse;
 import com.veersa.eventApp.DTO.ChangePasswordRequest;
 import com.veersa.eventApp.DTO.RegisterRequest;
 import com.veersa.eventApp.service.AuthService;
@@ -21,13 +22,15 @@ public class AuthController {
 
 
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody RegisterRequest request) {
-        return authService.register(request);
+    public ResponseEntity<AuthResponse> register(@Valid @RequestBody RegisterRequest request) {
+        AuthResponse response = authService.register(request);
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@Valid @RequestBody AuthRequest authRequest) {
-        return authService.login(authRequest);
+    public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
+        AuthResponse response = authService.login(request);
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/change-password")

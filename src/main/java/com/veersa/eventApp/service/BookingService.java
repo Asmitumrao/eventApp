@@ -28,4 +28,7 @@ public interface BookingService {
 
     BookingResponse getBookingById(Long bookingId);
 
+    Void deleteBooking(Long bookingId);
+
+    List<BookingResponse> getCancelledBookingsByUser(Long userId);
 }
