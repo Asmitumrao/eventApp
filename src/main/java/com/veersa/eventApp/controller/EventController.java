@@ -6,16 +6,15 @@ import com.veersa.eventApp.DTO.EventResponse;
 import com.veersa.eventApp.DTO.EventSearchRequest;
 import com.veersa.eventApp.DTO.EventUpdateRequest;
 import com.veersa.eventApp.service.EventService;
-import com.veersa.eventApp.service.ServiceImpl.EventServiceImpl;
 import com.veersa.eventApp.util.SecurityUtils;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import java.security.Security;
 import java.util.List;
 
 @RestController
@@ -44,7 +43,7 @@ public class EventController {
         return ResponseEntity.ok(eventService.getPastEvents());
     }
 
-    
+
 
     // Get single event by ID
     @GetMapping("/{id}")
@@ -59,11 +58,11 @@ public class EventController {
     }
 
     // 🔐 Organizer or Admin: Create a new event
-    @PostMapping
+    @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     @PreAuthorize("hasAnyRole('ORGANIZER')")
-    public ResponseEntity<EventResponse> createEvent(@Valid @RequestBody EventCreateRequest event) {
-        System.out.println("Creating event");
-        return ResponseEntity.ok(eventService.createEvent(event));
+    public ResponseEntity<EventResponse> createEvent(@Valid @RequestPart("event")EventCreateRequest event,
+                                                     @RequestPart(value = "image", required = false) MultipartFile image) {
+        return ResponseEntity.ok(eventService.createEvent(event,image));
     }
 
 
@@ -104,6 +103,15 @@ public class EventController {
     public ResponseEntity<List<EventResponse>> getEventsByCategory(@PathVariable Long categoryId) {
         return ResponseEntity.ok(eventService.getEventsByCategoryId(categoryId));
     }
+
+    // 🔐 Organizer or Admin: Get all cancelled events created by himself(current user)
+    @GetMapping("/cancelled")
+    @PreAuthorize("hasAnyRole('ORGANIZER', 'ADMIN')")
+    public ResponseEntity<List<EventResponse>> getCancelledEvents(@RequestParam Long userId) {
+
+        return ResponseEntity.ok(eventService.getCancelledEventsByOrganizer(userId));
+    }
+
 
 
 

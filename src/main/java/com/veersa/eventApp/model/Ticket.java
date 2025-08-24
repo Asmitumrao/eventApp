@@ -37,4 +37,14 @@ public class Ticket {
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user; // link the ticket to a user who booked itcam
+
+    @Override
+    public String toString() {
+        return "Ticket{" +
+                "id=" + id +
+                ", ticketNumber='" + ticketNumber + '\'' +
+                // do NOT call booking.toString()
+                ", bookingId=" + (booking != null ? booking.getId() : null) +
+                '}';
+    }
 }

@@ -7,6 +7,7 @@ import com.razorpay.Refund;
 import com.veersa.eventApp.model.Booking;
 import com.veersa.eventApp.model.BookingStatus;
 import com.veersa.eventApp.respository.BookingRepository;
+import com.veersa.eventApp.service.BookingService;
 import com.veersa.eventApp.service.PaymentService;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
@@ -23,8 +24,16 @@ public class RazorpayPaymentService implements PaymentService {
 
     public RazorpayPaymentService(@Value("${razorpay.key}") String key,
                                   @Value("${razorpay.secret}") String secret, BookingRepository bookingRepository) throws RazorpayException {
+
+
+        System.out.println("Razorpay Key: " + key);
+        System.out.println("Razorpay Secret: " + secret);
+
         this.bookingRepository = bookingRepository;
         this.razorpayClient = new RazorpayClient(key, secret);
+
+        System.out.println(razorpayClient);
+        System.out.println("Razorpay Client initialized successfully");
     }
 
     @Override
@@ -40,23 +49,24 @@ public class RazorpayPaymentService implements PaymentService {
                 .put("contact", contact)
         );
 
-        return razorpayClient.paymentLink.create(payload);
+        System.out.println("Creating payment link with payload: " + payload.toString());
 
-//        PaymentResponse paymentResponse =PaymentResponse.builder()
-//                .paymentId(payment.get("id"))
-//                .paymentLink(payment.get("short_url"))
-//                .ammount(amountInRupees)
-//                .message("Payment link created successfully")
-//                .BookingId(bookingId.toString())
-//                .build();
-//
-//        return paymentResponse;
+        PaymentLink paymentLink = razorpayClient.paymentLink.create(payload);
+
+        System.out.println("Payment link created: " + paymentLink.toString());
+
+        return paymentLink;
+
     }
 
     @Override
-    public boolean verifyPayment(String paymentId,Long bookingId) throws RazorpayException {
+    public boolean verifyPayment(Booking booking) throws RazorpayException {
+
+        String paymentLinkId=booking.getPaymentId();
+
         try{
-            PaymentLink paymentLink = razorpayClient.paymentLink.fetch(paymentId);
+
+            PaymentLink paymentLink = razorpayClient.paymentLink.fetch(paymentLinkId);
             JSONObject json = new JSONObject(paymentLink.toString());
 
             if(!json.isNull("status") && json.getString("status").equals("paid")) {
@@ -109,7 +119,6 @@ public class RazorpayPaymentService implements PaymentService {
         try {
             // Fetch payment link details
             PaymentLink paymentLink = razorpayClient.paymentLink.fetch(paymentLinkId);
-            System.out.println("Payment Link Details: " + paymentLink.toString());
             JSONObject paymentLinkJson = new JSONObject(paymentLink.toString());
 
             // Check if payments exist

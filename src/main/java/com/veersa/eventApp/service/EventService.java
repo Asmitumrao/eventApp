@@ -5,6 +5,7 @@ import com.veersa.eventApp.DTO.EventResponse;
 import com.veersa.eventApp.DTO.EventSearchRequest;
 import com.veersa.eventApp.DTO.EventUpdateRequest;
 import com.veersa.eventApp.model.Event;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -12,13 +13,13 @@ public interface EventService {
 
     List<EventResponse> getAllEvents();
     EventResponse getEventById(Long id);
-    EventResponse createEvent(EventCreateRequest request);
+    EventResponse createEvent(EventCreateRequest request, MultipartFile image);
     EventResponse updateEvent(Long id, EventUpdateRequest request);
     void deleteEvent(Long id);
     List<EventResponse> filterAndSearchEvents(EventSearchRequest request);
-    public List<EventResponse> getEventsByUserId(Long userId);
+    List<EventResponse> getEventsByUserId(Long userId);
     List<EventResponse> getEventsByCategoryId(Long categoryId);
     List<EventResponse> getUpcomingEvents();
     List<EventResponse> getPastEvents();
-
+    List<EventResponse> getCancelledEventsByOrganizer(Long userId);
 }

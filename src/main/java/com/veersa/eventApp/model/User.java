@@ -61,4 +61,18 @@ import java.time.LocalDateTime;
             this.updatedAt = LocalDateTime.now();
         }
 
+
+        @Override
+        public String toString() {
+            return "User{" +
+                    "id=" + id +
+                    ", username='" + username + '\'' +
+                    ", email='" + email + '\'' +
+                    ", role=" + role.getName() +
+                    ", enabled=" + enabled +
+                    ", createdAt=" + createdAt +
+                    ", updatedAt=" + updatedAt +
+                    '}';
+        }
+
 }

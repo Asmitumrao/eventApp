@@ -20,7 +20,12 @@ public class EventMapper {
         event.setAvailableSeats(request.getAvailableSeats());
         event.setPricePerTicket(request.getPricePerTicket());
         event.setOnline(request.getIsOnline());
-        event.setEventImageUrl(request.getEventImageUrl());
+
+
+        if(request.getEventImageUrl()==null)
+            event.setEventImageUrl("image not present"); // default image URL
+        else
+            event.setEventImageUrl(request.getEventImageUrl());
 
 
         return event;

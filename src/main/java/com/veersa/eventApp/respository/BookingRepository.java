@@ -13,6 +13,10 @@ import java.util.List;
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
     // Get all bookings by a specific user
+    @Query("SELECT b FROM Booking b WHERE b.status != 'CANCELLED'")
+    List<Booking> findAll();
+
+
     @Query("SELECT b FROM Booking b WHERE b.user = :user AND b.status != 'CANCELLED'")
     List<Booking> findByUser(User user);
 

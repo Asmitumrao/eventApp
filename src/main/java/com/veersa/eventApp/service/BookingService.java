@@ -18,7 +18,7 @@ public interface BookingService {
 
     Booking savePendingBooking(BookingRequest bookingRequest);
 
-    public boolean verifyPaymentAndConfirm(Long bookingId,String paymentId) throws RazorpayException;
+    public boolean verifyPaymentAndConfirm(Long bookingId) throws RazorpayException;
 
     List<BookingResponse> getBookingsByUser(Long userId);
 

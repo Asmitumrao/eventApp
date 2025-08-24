@@ -1,12 +1,15 @@
-# Use official OpenJDK base image
-FROM openjdk:21-jdk
+# Use a lightweight Java image
+FROM eclipse-temurin:21-jdk-alpine
 
-# Add metadata (optional)
-LABEL maintainer="asmitumrao@gmail.com"
+# Set the working directory inside the container
+WORKDIR /app
 
-# Add app jar to container
-ARG JAR_FILE=target/*.jar
-COPY ${JAR_FILE} app.jar
+# Copy the Maven build artifact (your jar) to the container
+COPY target/eventApp-0.0.1-SNAPSHOT.jar app.jar
 
-# Run the jar
-ENTRYPOINT ["java", "-jar", "/app.jar"]
+# Expose the port your Spring Boot app runs on (default is 8080)
+EXPOSE 8080
+
+# Run the Spring Boot app
+ENTRYPOINT ["java", "-jar", "app.jar", "--spring.profiles.active=docker"]
+

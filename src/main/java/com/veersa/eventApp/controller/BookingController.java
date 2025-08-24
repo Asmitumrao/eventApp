@@ -46,8 +46,7 @@ public class BookingController {
     }
 
     // get cancelled bookings for the current user
-    @GetMapping
-    @RequestMapping("/cancelled")
+    @GetMapping("/cancelled")
     @PreAuthorize("hasAnyRole('USER')")
     public ResponseEntity<List<BookingResponse>> getCancelledBookings() {
         Long userId = securityUtils.getCurrentUserId();

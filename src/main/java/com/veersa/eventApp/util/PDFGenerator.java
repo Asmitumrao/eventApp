@@ -11,6 +11,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDate;
 
 @Component
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class PDFGenerator {
                 document.add(new Paragraph("Ticket Number: " + ticket.getTicketNumber()));
                 document.add(new Paragraph("Event: " + ticket.getEvent().getName()));
                 document.add(new Paragraph("Seat: " + ticket.getSeatNumber()));
-                document.add(new Paragraph("Issued At: " + ticket.getIssuedAt()));
+                document.add(new Paragraph("Issued At: " +  LocalDate.now()));//current date
                 document.add(new Paragraph("Checked In: " + ticket.getCheckedIn()));
                 document.add(new Paragraph(" "));
 

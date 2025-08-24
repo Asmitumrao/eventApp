@@ -6,7 +6,7 @@ import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 
-@FeignClient(name = "emailer-service", url = "http://localhost:8081" ,fallback = EmailerFallback.class, configuration = EmailerFeignConfig.class)
+@FeignClient(name = "emailer-service", url = "${notification.service.url}" ,fallback = EmailerFallback.class)
 public interface EmailerClient {
 
     @PostMapping("/api/email/send")

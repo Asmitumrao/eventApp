@@ -22,10 +22,10 @@ public class PaymentController {
     private final BookingService bookingService;
 
     @GetMapping("/payment/verify")
-    public ResponseEntity<?> verifyAndConfirmBooking(@RequestParam Long bookingId , @RequestParam String paymentId){
+    public ResponseEntity<?> verifyAndConfirmBooking(@RequestParam Long bookingId){
 
         try{
-            boolean isPaymentSuccessful = bookingService.verifyPaymentAndConfirm(bookingId, paymentId);
+            boolean isPaymentSuccessful = bookingService.verifyPaymentAndConfirm(bookingId);
             if (isPaymentSuccessful) {
                 return ResponseEntity.ok("Payment successful and booking confirmed!");
             } else {

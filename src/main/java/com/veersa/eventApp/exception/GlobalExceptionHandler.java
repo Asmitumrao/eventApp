@@ -8,6 +8,8 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOError;
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -41,6 +43,23 @@ public class GlobalExceptionHandler {
 
 
 
+    @ExceptionHandler(UnauthorizedActionException.class)
+    public ResponseEntity<String> handleUnauthorized(UnauthorizedActionException ex) {
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(SeatsNotAvailableException.class)
+    public ResponseEntity<String> handleSeatsNotAvailable(SeatsNotAvailableException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+    @ExceptionHandler(PaymentFailedException.class)
+    public ResponseEntity<String> handlePaymentFailed(PaymentFailedException ex) {
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
+    }
+
+
+
     @ExceptionHandler(IncorrectPasswordException.class)
     public ResponseEntity<String> handleIncorrectPassword(IncorrectPasswordException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
@@ -48,6 +67,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(PasswordMismatchException.class)
     public ResponseEntity<String> handlePasswordMismatch(PasswordMismatchException ex) {
+        return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
+    }
+
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<String> handleIOException(PasswordMismatchException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
     }
 

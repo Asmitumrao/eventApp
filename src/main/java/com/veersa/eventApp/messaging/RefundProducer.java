@@ -18,6 +18,6 @@ public class RefundProducer {
                 RabbitMQConfig.REFUND_ROUTING_KEY,
                 refundMessage
         );
-        System.out.println("Refund message sent: " + refundMessage);
+//        System.out.println("Refund message sent: " + refundMessage);
     }
 }
